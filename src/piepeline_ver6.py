@@ -29,17 +29,30 @@ query='SELECT * FROM tabela'
 #escolher o  volume de linhas em cada interação
 chunksize=500000  
 
-for chunk in pd.read_sql(query,connection, chunksize=chunksize): 
+for i, chunk in enumerate (pd.read_sql(query, conn, chunksize=chunksize)):
     df_lista.append(chunk)
     del chunk
+print('tudo foi importado')
+
+df=pd.concat(df_lista,ignore_index=True)
+df=df.fillna('')
+df=df.astype(str)
+print('df concatenado')
 
 connection.close()
-df=pd.concat(df_lista,ignore_index=True)
+print('closed connection')
 
 #----------aqui entraria o tratamento, caso necessario------------
 
 #converte para parquet
 df.to_parquet('parquet_file.parquet')
+print('Dataframe convertido para Parquet com sucesso.')
+
+colunas = df.columns.tolist()
+print(colunas)
+
+
+
 
 #uploado bucket
 current_date=datetime.now().strftime('%Y%m%d')
@@ -50,7 +63,6 @@ key=f'nome do arquivo no bucket_{current_date}.parquet'
 s3.upload_file(file_name='parquet_file.parquet',
                bucket=bucket,
                key=key)
-
 
 
 
